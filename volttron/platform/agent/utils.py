@@ -63,7 +63,6 @@ import os
 import re
 import stat
 import sys
-import syslog
 import traceback
 
 import gevent
@@ -204,12 +203,13 @@ def default_main(agent_class, description=None, argv=sys.argv,
         pass
 
 
+# Mapping to syslog levels
 class SyslogFormatter(logging.Formatter):
-    _level_map = {logging.DEBUG: syslog.LOG_DEBUG,
-                  logging.INFO: syslog.LOG_INFO,
-                  logging.WARNING: syslog.LOG_WARNING,
-                  logging.ERROR: syslog.LOG_ERR,
-                  logging.CRITICAL: syslog.LOG_CRIT,}
+    _level_map = {logging.DEBUG: 7,   # LOG_DEBUG
+                  logging.INFO: 6,   # LOG_INFO
+                  logging.WARNING: 4,   # LOG_WARNING
+                  logging.ERROR: 3,   # LOG_ERR
+                  logging.CRITICAL: 2}   # LOG_CRIT
 
     def format(self, record):
         level = self._level_map.get(record.levelno, syslog.LOG_INFO)
