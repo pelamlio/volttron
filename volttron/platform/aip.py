@@ -96,6 +96,8 @@ except ImportError:
     auth = None
 
 
+_ON_WINDOWS = sys.platform.startswith('win')
+
 _log = logging.getLogger(__name__)
 
 
@@ -513,8 +515,9 @@ class AIPplatform(object):
                                 '{}.agent-data'.format(pkg.package_name))
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
-        execenv.execute(argv, cwd=data_dir, env=environ, close_fds=True,
-                        stdin=open(os.devnull), stdout=PIPE, stderr=PIPE)
+        execenv.execute(
+            argv, cwd=data_dir, env=environ, close_fds=(not _ON_WINDOWS),
+            stdin=open(os.devnull), stdout=PIPE, stderr=PIPE)
         self.agents[agent_uuid] = execenv
         pid = execenv.process.pid
         _log.info('agent %s has PID %s', agent_path, pid)
