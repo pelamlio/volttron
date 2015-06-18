@@ -65,10 +65,12 @@ try:
     from fcntl import fcntl, F_GETFL, F_SETFL
 except ImportError:
     # Make this a no-op on Windows
-    def fcntl(*args, **kwargs):
+    def setnonblocking(fd):
         pass
 else:
     from os import O_NONBLOCK
+    def setnonblocking(fd):
+        fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
 import logging
 import os
 import shutil
@@ -113,7 +115,7 @@ def process_wait(p):
 
 
 def gevent_readlines(fd):
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
+    setnonblocking(fd)
     data = []
     while True:
         select.select([fd], [], [])
