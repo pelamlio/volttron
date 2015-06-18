@@ -89,6 +89,8 @@ examples to demonstrate.
     Topic(u'root/first//{middle}//third')
 '''
 
+from __future__ import absolute_import
+
 import os
 import socket
 
