@@ -61,16 +61,6 @@
 
 import contextlib
 import errno
-try:
-    from fcntl import fcntl, F_GETFL, F_SETFL
-except ImportError:
-    # Make this a no-op on Windows
-    def setnonblocking(fd):
-        pass
-else:
-    from os import O_NONBLOCK
-    def setnonblocking(fd):
-        fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
 import logging
 import os
 import shutil
@@ -81,6 +71,7 @@ import sys
 import uuid
 
 import gevent
+from gevent.fileobject import FileObject
 from gevent import select
 import simplejson as jsonapi
 from wheel.tool import unpack
@@ -112,27 +103,6 @@ def process_wait(p):
         gevent.sleep(timeout)
         if timeout < 0.5:
             timeout *= 2
-
-
-def gevent_readlines(fd):
-    setnonblocking(fd)
-    data = []
-    while True:
-        select.select([fd], [], [])
-        buf = fd.read(4096)
-        if not buf:
-            break
-        parts = buf.split('\n')
-        if len(parts) < 2:
-            data.extend(parts)
-        else:
-            first, rest, data = (
-                ''.join(data + parts[0:1]), parts[1:-1], parts[-1:])
-            yield first
-            for line in rest:
-                yield line
-    if any(data):
-        yield ''.join(data)
 
 
 # LOG_* constants from syslog module (not available on Windows)
@@ -525,10 +495,10 @@ class AIPplatform(object):
         _log.info('agent %s has PID %s', agent_path, pid)
         gevent.spawn(log_stream, 'agents.stderr', name, pid, argv[0],
                      _log_stream('agents.log', name, pid, logging.ERROR,
-                                 gevent_readlines(execenv.process.stderr)))
+                                 FileObject(execenv.process.stderr, 'r')))
         gevent.spawn(log_stream, 'agents.stdout', name, pid, argv[0],
                      ((logging.INFO, line) for line in
-                      gevent_readlines(execenv.process.stdout)))
+                      FileObject(execenv.process.stdout, 'r')))
 
     def launch_agent(self, agent_path):
         while True:
