@@ -89,6 +89,9 @@ else:
     HAVE_RESTRICTED = True
 
 
+_ON_WINDOWS = sys.platform.startswith('win')
+
+
 _log = logging.getLogger(os.path.basename(sys.argv[0])
                          if __name__ == '__main__' else __name__)
 
@@ -320,6 +323,10 @@ def main(argv=sys.argv):
     agents.add_argument(
         '--vip-address', metavar='ZMQADDR', action='append', default=[],
         help='ZeroMQ URL to bind for VIP connections')
+    if _ON_WINDOWS:
+        agents.add_argument(
+            '--vip-local-port', metavar='PORT', type=int, default=14321,
+            help='port for local agent VIP connections (default: %(default)s)')
 
     # XXX: re-implement control options
     #on
@@ -374,6 +381,13 @@ def main(argv=sys.argv):
         #    '--no-mobility', action='store_false', dest='mobility',
         #    help=argparse.SUPPRESS)
 
+    # Used to detect user-set arguments from defaults.
+    if _ON_WINDOWS:
+        class _Default(str):
+            pass
+    else:
+        _Default = str
+
     ipc = 'ipc://%s$VOLTTRON_HOME/run/' % (
         '@' if sys.platform.startswith('linux') else '')
     parser.set_defaults(
@@ -382,9 +396,9 @@ def main(argv=sys.argv):
         verboseness=logging.WARNING,
         volttron_home=volttron_home,
         autostart=True,
-        publish_address=ipc + 'publish',
-        subscribe_address=ipc + 'subscribe',
-        vip_address=[ipc + 'vip.socket'],
+        publish_address=_Default(ipc + 'publish'),
+        subscribe_address=_Default(ipc + 'subscribe'),
+        vip_address=[_Default(ipc + 'vip.socket')],
         #allow_root=False,
         #allow_users=None,
         #allow_groups=None,
@@ -404,6 +418,14 @@ def main(argv=sys.argv):
         opts.log = config.expandall(opts.log)
     if opts.log_config:
         opts.log_config = config.expandall(opts.log_config)
+    if _ON_WINDOWS:
+        port = opts.vip_local_port
+        if isinstance(opts.vip_address[0], _Default):
+            opts.vip_address[0] = 'tcp://127.0.0.1:%d' % port
+        if isinstance(opts.publish_address, _Default):
+            opts.publish_address = 'tcp://127.0.0.1:%d' % (port + 1)
+        if isinstance(opts.subscribe_address, _Default):
+            opts.subscribe_address = 'tcp://127.0.0.1:%d' % (port + 2)
     opts.publish_address = config.expandall(opts.publish_address)
     opts.subscribe_address = config.expandall(opts.subscribe_address)
     opts.vip_address = [config.expandall(addr) for addr in opts.vip_address]
