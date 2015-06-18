@@ -85,6 +85,8 @@ else:
     from volttron.restricted import cgroups
     HAVE_RESTRICTED = True
 
+_ON_WINDOWS = sys.platform.startswith('win')
+
 _stdout = sys.stdout
 _stderr = sys.stderr
 
@@ -544,6 +546,10 @@ def main(argv=sys.argv):
     global_args.add_argument(
         '--vip-address', metavar='ZMQADDR',
         help='ZeroMQ URL to bind for VIP connections')
+    if _ON_WINDOWS:
+        global_args.add_argument(
+            '--vip-local-port', metavar='PORT', type=int, default=14321,
+            help='port for local agent VIP connections (default: %(default)s)')
 
     parser = config.ArgumentParser(
         prog=os.path.basename(argv[0]), add_help=False,
@@ -575,13 +581,20 @@ def main(argv=sys.argv):
 
     parser.add_help_argument()
 
+    # Used to detect user-set arguments from defaults.
+    if _ON_WINDOWS:
+        class _Default(str):
+            pass
+    else:
+        _Default = str
+
     vip_path = '$VOLTTRON_HOME/run/vip.socket'
     if sys.platform.startswith('linux'):
         vip_path = '@' + vip_path
     parser.set_defaults(
         log_config=None,
         volttron_home=volttron_home,
-        vip_address='ipc://' + vip_path,
+        vip_address=_Default('ipc://' + vip_path),
         timeout=30,
     )
 
@@ -716,6 +729,10 @@ def main(argv=sys.argv):
     if opts.log_config:
         logging.config.fileConfig(opts.log_config)
 
+    if _ON_WINDOWS:
+        port = opts.vip_local_port
+        if isinstance(opts.vip_address, _Default):
+            opts.vip_address = 'tcp://127.0.0.1:%d' % port
     opts.vip_address = config.expandall(opts.vip_address)
     opts.aip = aipmod.AIPplatform(opts)
     opts.aip.setup()
