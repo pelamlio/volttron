@@ -90,6 +90,7 @@ examples to demonstrate.
 '''
 
 import os
+import socket
 
 from .utils import Topic as _
 
@@ -103,7 +104,7 @@ PLATFORM = _('platform/{subtopic}')
 PLATFORM_SHUTDOWN = PLATFORM(subtopic='shutdown')
 
 AGENT_SHUTDOWN = _('agent/{agent}/shutdown')
-AGENT_PING = _('agent/ping/{}/{}/{{cookie}}'.format(os.uname()[1], os.getpid()))
+AGENT_PING = _('agent/ping/{}/{}/{{cookie}}'.format(socket.gethostname(), os.getpid()))
 
 LOGGER = _('datalogger/{subtopic}')
 LOGGER_LOG = LOGGER(subtopic='log')
