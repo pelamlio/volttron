@@ -96,7 +96,7 @@ except ImportError:
     auth = None
 
 
-_ON_WINDOWS = sys.platform.startswith('win')
+_WINDOWS = sys.platform.startswith('win')
 
 _log = logging.getLogger(__name__)
 
@@ -516,7 +516,7 @@ class AIPplatform(object):
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
         execenv.execute(
-            argv, cwd=data_dir, env=environ, close_fds=(not _ON_WINDOWS),
+            argv, cwd=data_dir, env=environ, close_fds=(not _WINDOWS),
             stdin=open(os.devnull), stdout=PIPE, stderr=PIPE)
         self.agents[agent_uuid] = execenv
         pid = execenv.process.pid

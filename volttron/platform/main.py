@@ -89,7 +89,7 @@ else:
     HAVE_RESTRICTED = True
 
 
-_ON_WINDOWS = sys.platform.startswith('win')
+_WINDOWS = sys.platform.startswith('win')
 
 
 _log = logging.getLogger(os.path.basename(sys.argv[0])
@@ -323,7 +323,7 @@ def main(argv=sys.argv):
     agents.add_argument(
         '--vip-address', metavar='ZMQADDR', action='append', default=[],
         help='ZeroMQ URL to bind for VIP connections')
-    if _ON_WINDOWS:
+    if _WINDOWS:
         agents.add_argument(
             '--vip-local-port', metavar='PORT', type=int, default=14321,
             help='port for local agent VIP connections (default: %(default)s)')
@@ -382,7 +382,7 @@ def main(argv=sys.argv):
         #    help=argparse.SUPPRESS)
 
     # Used to detect user-set arguments from defaults.
-    if _ON_WINDOWS:
+    if _WINDOWS:
         class _Default(str):
             pass
     else:
@@ -418,7 +418,7 @@ def main(argv=sys.argv):
         opts.log = config.expandall(opts.log)
     if opts.log_config:
         opts.log_config = config.expandall(opts.log_config)
-    if _ON_WINDOWS:
+    if _WINDOWS:
         port = opts.vip_local_port
         if isinstance(opts.vip_address[0], _Default):
             opts.vip_address[0] = 'tcp://127.0.0.1:%d' % port

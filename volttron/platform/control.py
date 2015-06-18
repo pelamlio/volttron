@@ -85,7 +85,7 @@ else:
     from volttron.restricted import cgroups
     HAVE_RESTRICTED = True
 
-_ON_WINDOWS = sys.platform.startswith('win')
+_WINDOWS = sys.platform.startswith('win')
 
 _stdout = sys.stdout
 _stderr = sys.stderr
@@ -546,7 +546,7 @@ def main(argv=sys.argv):
     global_args.add_argument(
         '--vip-address', metavar='ZMQADDR',
         help='ZeroMQ URL to bind for VIP connections')
-    if _ON_WINDOWS:
+    if _WINDOWS:
         global_args.add_argument(
             '--vip-local-port', metavar='PORT', type=int, default=14321,
             help='port for local agent VIP connections (default: %(default)s)')
@@ -582,7 +582,7 @@ def main(argv=sys.argv):
     parser.add_help_argument()
 
     # Used to detect user-set arguments from defaults.
-    if _ON_WINDOWS:
+    if _WINDOWS:
         class _Default(str):
             pass
     else:
@@ -729,7 +729,7 @@ def main(argv=sys.argv):
     if opts.log_config:
         logging.config.fileConfig(opts.log_config)
 
-    if _ON_WINDOWS:
+    if _WINDOWS:
         port = opts.vip_local_port
         if isinstance(opts.vip_address, _Default):
             opts.vip_address = 'tcp://127.0.0.1:%d' % port
